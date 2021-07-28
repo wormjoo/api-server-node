@@ -13,12 +13,12 @@ const {connect} = require("http2");
 
 // Service: Create, Update, Delete 비즈니스 로직 처리
 
-exports.createUser = async function (email, password, nickname) {
+exports.createUser = async function (userId, password, name, nickname) {
     try {
         // 이메일 중복 확인
-        const emailRows = await userProvider.emailCheck(email);
-        if (emailRows.length > 0)
-            return errResponse(baseResponse.SIGNUP_REDUNDANT_EMAIL);
+        const userIdRows = await userProvider.userIdCheck(userId);
+        if (userIdRows.length > 0)
+            return errResponse(baseResponse.SIGNUP_REDUNDANT_ID);
 
         // 비밀번호 암호화
         const hashedPassword = await crypto
@@ -26,7 +26,7 @@ exports.createUser = async function (email, password, nickname) {
             .update(password)
             .digest("hex");
 
-        const insertUserInfoParams = [email, hashedPassword, nickname];
+        const insertUserInfoParams = [userId, hashedPassword, name, nickname];
 
         const connection = await pool.getConnection(async (conn) => conn);
 
@@ -42,15 +42,13 @@ exports.createUser = async function (email, password, nickname) {
     }
 };
 
-
-// TODO: After 로그인 인증 방법 (JWT)
-exports.postSignIn = async function (email, password) {
+exports.postSignIn = async function (userId, password) {
     try {
         // 이메일 여부 확인
-        const emailRows = await userProvider.emailCheck(email);
-        if (emailRows.length < 1) return errResponse(baseResponse.SIGNIN_EMAIL_WRONG);
+        const userIdRows = await userProvider.userIdCheck(userId);
+        if (userIdRows.length < 1) return errResponse(baseResponse.SIGNIN_USERID_WRONG);
 
-        const selectEmail = emailRows[0].email
+        const selectUserId = userIdRows[0].userId
 
         // 비밀번호 확인
         const hashedPassword = await crypto
@@ -58,7 +56,7 @@ exports.postSignIn = async function (email, password) {
             .update(password)
             .digest("hex");
 
-        const selectUserPasswordParams = [selectEmail, hashedPassword];
+        const selectUserPasswordParams = [selectUserId, hashedPassword];
         const passwordRows = await userProvider.passwordCheck(selectUserPasswordParams);
 
         if (passwordRows[0].password !== hashedPassword) {
@@ -66,29 +64,26 @@ exports.postSignIn = async function (email, password) {
         }
 
         // 계정 상태 확인
-        const userInfoRows = await userProvider.accountCheck(email);
+        const userInfoRows = await userProvider.accountCheck(userId);
 
-        if (userInfoRows[0].status === "INACTIVE") {
-            return errResponse(baseResponse.SIGNIN_INACTIVE_ACCOUNT);
-        } else if (userInfoRows[0].status === "DELETED") {
+        if (userInfoRows[0].status === "N")
             return errResponse(baseResponse.SIGNIN_WITHDRAWAL_ACCOUNT);
-        }
 
         console.log(userInfoRows[0].id) // DB의 userId
 
         //토큰 생성 Service
         let token = await jwt.sign(
             {
-                userId: userInfoRows[0].id,
+                id: userInfoRows[0].id,
             }, // 토큰의 내용(payload)
             secret_config.jwtsecret, // 비밀키
             {
                 expiresIn: "365d",
-                subject: "userInfo",
+                subject: "user",
             } // 유효 기간 365일
         );
 
-        return response(baseResponse.SUCCESS, {'userId': userInfoRows[0].id, 'jwt': token});
+        return response(baseResponse.SUCCESS, {'id': userInfoRows[0].id, 'jwt': token});
 
     } catch (err) {
         logger.error(`App - postSignIn Service error\n: ${err.message} \n${JSON.stringify(err)}`);
