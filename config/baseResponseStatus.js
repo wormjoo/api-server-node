@@ -60,6 +60,8 @@ module.exports = {
 
     SELLER_ADDRESS_EMPTY : { "isSuccess": false, "code": 2039, "message":"주소를 입력해주세요" },
 
+    LEISURE_ID_EMPTY : { "isSuccess": false, "code": 2040, "message":"레저 아이디를 입력해주세요" },
+
     // Response error
     SIGNUP_REDUNDANT_ID : { "isSuccess": false, "code": 3001, "message":"중복된 아이디입니다." },
     SIGNUP_REDUNDANT_NICKNAME : { "isSuccess": false, "code": 3002, "message":"중복된 닉네임입니다." },

@@ -106,7 +106,7 @@ exports.getUserById = async function (req, res) {
  * [POST] /app/login
  * body : userId, passsword
  */
-exports.login = async function (req, res) {
+exports.signIn = async function (req, res) {
 
     const {userId, password} = req.body;
 

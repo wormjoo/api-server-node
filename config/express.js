@@ -24,6 +24,8 @@ module.exports = function () {
     require('../src/app/Ktx/ktxRoute')(app);
     require('../src/app/Flight/flightRoute')(app);
     require('../src/app/Category/categoryRoute')(app);
+    require('../src/app/Leisure/leisureRoute')(app);
+    require('../src/app/Oauth/oauthRoute')(app);
     // require('../src/app/Board/boardRoute')(app);
 
     return app;
